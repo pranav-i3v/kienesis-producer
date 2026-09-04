@@ -3,11 +3,9 @@ package com.pranav.kpl.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.nio.ByteBuffer;
 
-@Component
 public class JsonUtil {
     private static final Logger logger = LoggerFactory.getLogger(JsonUtil.class);
     private final ObjectMapper objectMapper;
