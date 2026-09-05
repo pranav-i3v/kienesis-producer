@@ -14,7 +14,6 @@ import com.pranav.kpl.model.ProducerHealthResult;
 import com.pranav.kpl.model.PublishResult;
 import com.pranav.kpl.request.PutRecordRequest;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
-import software.amazon.kinesis.producer.IKinesisProducer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +21,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-/** Publishes data exclusively through KPL; the SDK client is used only for control-plane health checks. */
+/** Publishes data asynchronously through AWS SDK v2 KinesisAsyncClient. */
 public class KinesisProducerService {
 
     private final KinesisRecordValidator recordValidator;
@@ -30,12 +29,11 @@ public class KinesisProducerService {
     private final KinesisRetryPolicy retryPolicy;
     private final KinesisProducerHealthService healthService;
 
-    public KinesisProducerService(IKinesisProducer kinesisProducer,
-                                  KinesisAsyncClient kinesisAsyncClient,
+    public KinesisProducerService(KinesisAsyncClient kinesisAsyncClient,
                                   JsonUtil jsonUtil,
                                   KinesisProducerProperties properties) {
         this(new KinesisRecordValidator(jsonUtil, properties),
-                new KplRecordPublisher(kinesisProducer),
+                new KplRecordPublisher(kinesisAsyncClient),
                 new KinesisRetryPolicy(properties),
                 new KinesisProducerHealthService(kinesisAsyncClient));
     }

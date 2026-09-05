@@ -25,13 +25,6 @@
             <artifactId>spring-boot-starter</artifactId>
         </dependency>
 
-        <!-- AWS SDK v2 - Kinesis Producer Library -->
-        <dependency>
-            <groupId>software.amazon.kinesis</groupId>
-            <artifactId>amazon-kinesis-producer</artifactId>
-            <version>1.0.7</version>
-        </dependency>
-
         <!-- AWS SDK v2 - Core -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>

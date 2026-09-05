@@ -16,6 +16,6 @@ public record FailureDetails(String code, String message) {
         if (current instanceof AwsServiceException serviceException && serviceException.awsErrorDetails() != null) {
             return new FailureDetails(serviceException.awsErrorDetails().errorCode(), serviceException.getMessage());
         }
-        return new FailureDetails("KPL_SUBMISSION_ERROR", current.getMessage());
+        return new FailureDetails("KINESIS_SUBMISSION_ERROR", current.getMessage());
     }
 }

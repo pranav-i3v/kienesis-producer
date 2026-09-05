@@ -18,9 +18,6 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.services.kinesis.KinesisAsyncClient;
-import software.amazon.kinesis.producer.IKinesisProducer;
-import software.amazon.kinesis.producer.KinesisProducer;
-import software.amazon.kinesis.producer.KinesisProducerConfiguration;
 
 @AutoConfiguration
 @ConditionalOnProperty(prefix = "aws.kinesis.producer", name = "enabled", havingValue = "true", matchIfMissing = true)
@@ -47,14 +44,8 @@ public class KinesisProducerAutoConfiguration {
     }
 
     /**
-     * Creates the asynchronous AWS Kinesis client used for Kinesis
-     * control-plane operations.
-     *
-     * <p>This client is separate from {@link KinesisProducer}. The KPL producer
-     * is responsible for sending application records to Kinesis, while this
-     * client can be used by the library for operations such as retrieving
-     * stream/shard metadata, describing streams, or other Kinesis API calls
-     * that are not handled directly by the KPL.</p>
+     * Creates the asynchronous AWS Kinesis client used for record publishing
+     * and control-plane operations.
      *
      * <p>The client reuses the common AWS credentials provider and region
      * configured for the producer library.</p>
@@ -72,44 +63,8 @@ public class KinesisProducerAutoConfiguration {
                 .credentialsProvider(credentialsProvider)
                 .build();
 
-        logger.info("Kinesis async control client created for region: {}", properties.getRegion());
+        logger.info("Kinesis async client created for region: {}", properties.getRegion());
         return client;
-    }
-
-    /**
-     * Creates and configures the Kinesis Producer Library (KPL) producer.
-     *
-     * <p>This is the main producer component responsible for accepting
-     * application records and delivering them to the configured Kinesis stream.
-     * KPL handles producer-side buffering, batching/aggregation, retries,
-     * concurrency, and communication with Kinesis.</p>
-     *
-     * <p>The producer configuration is built from the library's Spring Boot
-     * properties and uses the shared AWS credentials provider.</p>
-     *
-     * <p>The bean is created only when the application has not supplied its own
-     * {@link IKinesisProducer}, allowing the application to override the
-     * default producer implementation.</p>
-     *
-     * <p>Spring invokes {@code destroy()} when the application shuts down so
-     * that the KPL producer can flush pending records and release its resources.</p>
-     */
-    @Bean(destroyMethod = "destroy")
-    @ConditionalOnMissingBean(IKinesisProducer.class)
-    public KinesisProducer kinesisProducer(KinesisProducerProperties properties,
-                                           AwsCredentialsProvider credentialsProvider) {
-
-        KinesisProducerConfiguration configuration = new KinesisProducerConfiguration()
-                .setRegion(properties.getRegion())
-                .setMaxConnections(properties.getMaxConnections())
-                .setRequestTimeout(properties.getRequestTimeout())
-                .setRecordMaxBufferedTime(properties.getRecordMaxBufferedTime())
-                .setAggregationEnabled(properties.isAggregationEnabled())
-                .setAggregationMaxSize(properties.getAggregationMaxSize())
-                .setAggregationMaxCount(properties.getAggregationMaxCount())
-                .setCredentialsProvider(credentialsProvider);
-
-        return new KinesisProducer(configuration);
     }
 
     @Bean
@@ -132,8 +87,8 @@ public class KinesisProducerAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public KplRecordPublisher kplRecordPublisher(IKinesisProducer kinesisProducer) {
-        return new KplRecordPublisher(kinesisProducer);
+    public KplRecordPublisher kplRecordPublisher(KinesisAsyncClient kinesisAsyncClient) {
+        return new KplRecordPublisher(kinesisAsyncClient);
     }
 
     @Bean
